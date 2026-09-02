@@ -47,6 +47,19 @@ app.use('/admin/queues/api', (req, res, next) => {
   next();
 });
 
+// Mount API routes synchronously
+app.use('/api', apiRouter);
+
+// Root health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', service: 'reachinbox-backend', timestamp: new Date().toISOString() });
+});
+
+// Centralized error handler
+app.use(errorHandler);
+
+const isVercel = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+
 const startServer = async () => {
   try {
     await initRedis();
@@ -54,31 +67,24 @@ const startServer = async () => {
     console.warn('[Backend Notice] Redis initialization notice:', err.message);
   }
 
-  // Import queues and workers after Redis server initialization
-  const { emailQueue } = await import('./workers/emailQueue');
-  await import('./workers/emailWorker');
+  // Import queues and workers gracefully
+  try {
+    const { emailQueue } = await import('./workers/emailQueue');
+    await import('./workers/emailWorker');
 
-  // Bull Board UI Dashboard setup at /admin/queues
-  const serverAdapter = new ExpressAdapter();
-  serverAdapter.setBasePath('/admin/queues');
+    // Bull Board UI Dashboard setup at /admin/queues
+    const serverAdapter = new ExpressAdapter();
+    serverAdapter.setBasePath('/admin/queues');
 
-  createBullBoard({
-    queues: [new BullMQAdapter(emailQueue as any) as any],
-    serverAdapter,
-  });
+    createBullBoard({
+      queues: [new BullMQAdapter(emailQueue as any) as any],
+      serverAdapter,
+    });
 
-  app.use('/admin/queues', serverAdapter.getRouter());
-
-  // Mount API routes
-  app.use('/api', apiRouter);
-
-  // Root health check endpoint
-  app.get('/health', (req, res) => {
-    res.json({ status: 'ok', service: 'reachinbox-backend', timestamp: new Date().toISOString() });
-  });
-
-  // Centralized error handler
-  app.use(errorHandler);
+    app.use('/admin/queues', serverAdapter.getRouter());
+  } catch (err: any) {
+    console.warn('[Backend Notice] Queue worker initialization skipped in serverless environment:', err.message);
+  }
 
   try {
     // Auto initialize default demo user in DB for smooth first launch
@@ -94,13 +100,17 @@ const startServer = async () => {
     console.warn('[Backend Notice] Elasticsearch offline, using DB fallback:', err.message);
   }
 
-  app.listen(Number(env.PORT), () => {
-    console.log(`===================================================`);
-    console.log(`🚀 ReachInbox Backend Server running on port ${env.PORT}`);
-    console.log(`📊 Bull Board Dashboard: http://localhost:${env.PORT}/admin/queues`);
-    console.log(`🔍 Health Check: http://localhost:${env.PORT}/health`);
-    console.log(`===================================================`);
-  });
+  if (!isVercel) {
+    app.listen(Number(env.PORT), () => {
+      console.log(`===================================================`);
+      console.log(`🚀 ReachInbox Backend Server running on port ${env.PORT}`);
+      console.log(`📊 Bull Board Dashboard: http://localhost:${env.PORT}/admin/queues`);
+      console.log(`🔍 Health Check: http://localhost:${env.PORT}/health`);
+      console.log(`===================================================`);
+    });
+  }
 };
 
 startServer();
+
+export default app;

@@ -13,6 +13,11 @@ let serverInstance: RedisMemoryServer | null = null;
 export let redisClient: Redis;
 
 export async function initRedis() {
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    console.log('[Redis] Serverless environment detected. Skipping local RedisMemoryServer spawn.');
+    return;
+  }
+
   if (!serverInstance) {
     try {
       serverInstance = new RedisMemoryServer({
