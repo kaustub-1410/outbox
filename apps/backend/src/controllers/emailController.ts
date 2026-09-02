@@ -116,7 +116,7 @@ export class EmailController {
         }),
       ]);
 
-      const recentActivity = recentJobs.map((job) => ({
+      const recentActivity = recentJobs.map((job: any) => ({
         id: job.id,
         type: job.status,
         message: `Email to ${job.lead.email} - Subject: "${job.subject}"`,

@@ -9,7 +9,14 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@reachinbox/shared-types": [
+        "../../packages/shared-types/dist/index.d.ts",
+        "../../packages/shared-types/src/index.ts"
+      ]
+    }
   },
   "include": ["src/**/*"]
 }

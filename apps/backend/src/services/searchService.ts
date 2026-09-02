@@ -115,7 +115,7 @@ export class SearchService {
         }),
       ]);
 
-      const items = dbJobs.map((job) => ({
+      const items = dbJobs.map((job: any) => ({
         id: job.id,
         campaignId: job.campaignId,
         leadId: job.leadId,

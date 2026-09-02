@@ -83,13 +83,13 @@ export class CampaignService {
 
     const now = Date.now();
     const emailJobsToCreate: Array<{
-      lead: (typeof createdLeads)[0];
+      lead: any;
       scheduledAt: Date;
       delayMs: number;
     }> = [];
 
     // Calculate incremental delayed job timestamps for each lead
-    createdLeads.forEach((lead, index) => {
+    createdLeads.forEach((lead: any, index: number) => {
       const scheduledTimeMs = startTime.getTime() + index * delayBetweenMs;
       const delayMs = Math.max(0, scheduledTimeMs - now);
       const scheduledAt = new Date(scheduledTimeMs);
