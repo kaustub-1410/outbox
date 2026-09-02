@@ -1,0 +1,33 @@
+{
+  "name": "reachinbox-email-scheduler",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ReachInbox Full-Stack Production-Grade Email Scheduler",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev --workspace=apps/backend",
+    "dev:frontend": "npm run dev --workspace=apps/frontend",
+    "build:shared": "npm run build --workspace=packages/shared-types",
+    "build:backend": "npm run build --workspace=apps/backend",
+    "build:frontend": "npm run build --workspace=apps/frontend",
+    "build": "npm run build:shared && npm run build:backend && npm run build:frontend",
+    "prisma:generate": "npm run prisma:generate --workspace=apps/backend",
+    "prisma:migrate": "npm run prisma:migrate --workspace=apps/backend",
+    "docker:up": "docker-compose up -d --build",
+    "docker:down": "docker-compose down"
+  },
+  "keywords": [
+    "reachinbox",
+    "email-scheduler",
+    "bullmq",
+    "redis",
+    "elasticsearch",
+    "nextjs",
+    "express"
+  ],
+  "author": "ReachInbox Engineering",
+  "license": "MIT"
+}

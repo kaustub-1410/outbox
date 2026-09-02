@@ -1,0 +1,93 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id               String            @id @default(uuid())
+  name             String
+  email            String            @unique
+  avatar           String?
+  googleId         String?           @unique
+  createdAt        DateTime          @default(now())
+  senders          Sender[]
+  campaigns        Campaign[]
+  slackConnections SlackConnection[]
+}
+
+model Sender {
+  id               String     @id @default(uuid())
+  userId           String
+  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  senderName       String
+  senderEmail      String
+  etherealHost     String?
+  etherealPort     Int?
+  etherealUser     String?
+  etherealPassword String?
+  createdAt        DateTime   @default(now())
+  emailJobs        EmailJob[]
+}
+
+model Campaign {
+  id                 String     @id @default(uuid())
+  userId             String
+  user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name               String
+  subject            String
+  body               String
+  startTime          DateTime
+  delayBetweenEmails Int        @default(2) // in seconds
+  hourlyLimit        Int        @default(200)
+  status             String     @default("SCHEDULED")
+  createdAt          DateTime   @default(now())
+  leads              Lead[]
+  emailJobs          EmailJob[]
+}
+
+model Lead {
+  id         String     @id @default(uuid())
+  campaignId String
+  campaign   Campaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  email      String
+  emailJobs  EmailJob[]
+}
+
+model EmailJob {
+  id          String    @id @default(uuid())
+  campaignId  String
+  campaign    Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  leadId      String
+  lead        Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  senderId    String
+  sender      Sender    @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  subject     String
+  body        String
+  scheduledAt DateTime
+  sentAt      DateTime?
+  status      String    @default("SCHEDULED")
+  bullJobId   String?
+  retryCount  Int       @default(0)
+  previewUrl  String?
+  createdAt   DateTime  @default(now())
+
+  @@index([status])
+  @@index([scheduledAt])
+  @@index([campaignId])
+}
+
+model SlackConnection {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId String
+  accessToken String
+  teamName    String?
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, workspaceId])
+}
